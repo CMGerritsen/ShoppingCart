@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Product;
+use App\Form\CheckoutType;
 use App\Form\ProductType;
 use App\Repository\ProductRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,6 +30,7 @@ class ProductController extends AbstractController
      */
     public function index(ProductRepository $productRepository): Response
     {
+//        $this->session->clear();
         return $this->render('product/index.html.twig', [
             'products' => $productRepository->findAll(),
         ]);
@@ -92,7 +94,7 @@ class ProductController extends AbstractController
      */
     public function delete(Request $request, Product $product): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$product->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $product->getId(), $request->request->get('_token'))) {
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->remove($product);
             $entityManager->flush();
@@ -104,8 +106,10 @@ class ProductController extends AbstractController
     /**
      * @Route("/{id}/cart", name="addToCart")
      */
-    public function addToCart($id, ProductRepository $productRepository)
+    public function addToCart(Product $product)
     {
+        $id = $product->getId();
+
         $getCart = $this->session->get('cart');
         if(isset($getCart[$id])){
             $getCart[$id]['aantal']++;
@@ -113,19 +117,71 @@ class ProductController extends AbstractController
             $getCart[$id] = array('aantal' => 1);
         }
         $this->session->set('cart', $getCart);
-
         $cart = $this->session->get('cart');
         $cartArray = [];
+        $totaal = 0;
+
         foreach($cart as $id => $product) {
             $res = $this->getDoctrine()
                 ->getRepository(Product::class)
                 ->find($id);
+
+            array_push($cartArray, [$id, $product['aantal'], $res]);
+
+            $totaal = $totaal + ($product['aantal'] * $res->getPrijs());
         }
 
-        array_push($cartArray, [$id, $product['aantal'], $res]);
+//        echo '<pre>' . print_r($_SESSION, TRUE) . '</pre>';
 
         return $this->render('product/addToCart.html.twig', [
-            'product' => $cartArray
+            'totaal' => $totaal,
+            'cart' => $cartArray,
         ]);
+    }
+
+    /**
+     * @Route("/checkout", name="checkout", methods={"GET","POST"})
+     */
+    public function checkout(Request $request, \Swift_Mailer $mailer)
+    {
+        $cart = $this->session->get('cart');
+        $cartArray = [];
+        $totaal = 0;
+
+        foreach ($cart as $id => $product) {
+            $res = $this->getDoctrine()
+                ->getRepository(Product::class)
+                ->find($id);
+
+            array_push($cartArray, [$id, $product['aantal'], $res]);
+
+            $totaal = $totaal + ($product['aantal'] * $res->getPrijs());
+        }
+
+        $form = $this->createForm(CheckoutType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $naam = $form->get('Naam')->getData();
+            $email = $form->get('Email')->getData();
+
+            $message = (new \Swift_Message('Factuur'))
+                ->setFrom('christiaangerritsen2000@gmail.com')
+                ->setTo($email)
+                ->setBody(
+                    '<p>Dit is de factuur</p>'
+                );
+
+                $mailer->send($message);
+
+                $this->session->clear();
+                return $this->redirect('/');
+        }
+
+            return $this->render('product/Checkout.html.twig', [
+                'form' => $form->createView(),
+                'totaal' => $totaal,
+                'cart' => $cartArray
+            ]);
     }
 }
