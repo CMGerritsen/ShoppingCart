@@ -2,16 +2,6 @@
 
 {% block body %}
 
-    {#{% for row in cart %}
-        {{ row[2].naam }}
-        &euro;{{ row[2].prijs * row[1] }}
-        {{ row[2].omschrijving }}
-        Aantal {{ row[1] }}
-        <br>
-    {% endfor %}
-    Totaal prijs: {{ totaal }}
-    <br>#}
-
-{{ include('product/_checkoutform.html.twig', {'button_label': 'Update'}) }}
+    <center>{{ include('product/_checkoutform.html.twig', {'button_label': 'Afrekenen'}) }}</center>
 
 {% endblock %}

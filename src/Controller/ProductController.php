@@ -165,11 +165,13 @@ class ProductController extends AbstractController
             $naam = $form->get('Naam')->getData();
             $email = $form->get('Email')->getData();
 
+            $data = $res->getNaam();
+
             $message = (new \Swift_Message('Factuur'))
                 ->setFrom('christiaangerritsen2000@gmail.com')
                 ->setTo($email)
                 ->setBody(
-                    '<p>Dit is de factuur</p>'
+                    'Dit is de factuur'
                 );
 
                 $mailer->send($message);

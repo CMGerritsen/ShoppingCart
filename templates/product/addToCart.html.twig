@@ -1,14 +1,27 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    {% for row in cart %}
-        {{ row[2].naam }}
-        &euro;{{ row[2].prijs * row[1] }}
-        {{ row[2].omschrijving }}
-        Aantal {{ row[1] }}
+    <table class="table">
+        <thead>
+        <th>Naam</th>
+        <th>Prijs</th>
+        <th>Omschrijving</th>
+        <th>Aantal</th>
+        </thead>
+        <tbody>
+        {% for row in cart %}
+            <tr>
+                <td>{{ row[2].naam }}</td>
+                <td>&euro;{{ row[2].prijs * row[1] }}</td>
+                <td>{{ row[2].omschrijving }}</td>
+                <td>Aantal {{ row[1] }}</td>
+            </tr>
+            <br>
+        {% endfor %}
         <br>
-    {% endfor %}
-     Totaal prijs: {{ totaal }}
+        </tbody>
+    </table>
+    Totaal prijs: {{ totaal }}
     <br>
     <a href="/checkout" class="btn btn-primary">Afrekenen</a>
 {% endblock %}
